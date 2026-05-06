@@ -1,0 +1,13 @@
+{
+  "models": {
+    "embedding": "nomic-ai/nomic-embed-text-v1.5",
+    "llm": "llama3.2:1b"
+  },
+  "ollama": {
+    "host": "http://localhost:11434"
+  },
+  "databases": {
+    "ladybug": "./graph",
+    "lancedb": "./vectors"
+  }
+}
