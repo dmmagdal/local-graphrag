@@ -7,13 +7,15 @@ import random
 import shutil
 
 import datasets
+from tqdm import tqdm
 import pyarrow as pa
 
 from local_vectors import detect_device
 from local_graphrag import GraphRAG
 
 
-random.seed(1234)
+SEED = 1234
+random.seed(SEED)
 
 def main():
 	# Load the dataset.
@@ -41,7 +43,7 @@ def main():
 
 	# Load the configuration information.
 	with open("config.json", "r") as f:
-		config = json.load(f)["graphrag"]
+		config = json.load(f)['graphrag']
 
 	# Unpack and organized theh configuration data for each component 
 	# of the graphrag.
@@ -49,8 +51,21 @@ def main():
 	graph_config = config["graph"]
 	llm_config = config["llm"]
 
+	# Clear any existing tables or databases.
+	storage_artifacts = [
+		vector_config["vector_db"],
+		graph_config["graph_db"],
+		"./graph"
+	]
+	for artifact in storage_artifacts:
+		if os.path.exists(artifact):
+			if os.path.isdir(artifact):
+				shutil.rmtree(artifact)
+			else:
+				os.remove(artifact)
+
 	# Detect GPU accelerators.
-	device = detect_device()
+	device = detect_device(force_cpu=True)
 
 	# Initialize graphrag with the configuration.
 	graphrag = GraphRAG(
@@ -62,6 +77,7 @@ def main():
 		batch_size=vector_config["batch_size"],
 		device=device,
 		use_binary=vector_config["use_binary"],
+		query_metric=vector_config["metric"],
 		model_save_root=vector_config["model_save_root"],
 		host=llm_config["host"],  
 	)
@@ -70,10 +86,14 @@ def main():
 	# pass that to the graphrag so that the vectordb can build the 
 	# table.
 	schema = pa.schema([
-		pa.field("chunk_id", pa.string()),
+		pa.field("id", pa.string()),
+		pa.field("subtext", pa.string()),
 		pa.field("text_len", pa.int32()),
 		pa.field("text_idx", pa.int32()),
-		pa.field("vector", pa.list_(pa.float32))
+		pa.field("vector", pa.list_(
+			pa.uint8() if vector_config["use_binary"] else pa.float32(), 
+			graphrag.get_dims()
+		)),
 	])
 	graphrag.build_vector_table(
 		table_name=vector_config["table_name"],
@@ -81,10 +101,25 @@ def main():
 	)
 
 	# Ingest and index the documents to the graphrag.
-	for doc in documents:
-		graphrag.ingest(text=doc["chunk"], doc_id=doc["chunk_id"])
+	for split_name, data in documents.items():
+		for doc in tqdm(data, desc=f"Ingesting {split_name} split into Graph RAG"):
+			graphrag.ingest(
+				text=doc["chunk"], 
+				doc_id=doc["chunk_id"],
+				table_name=vector_config["table_name"]
+			)
 
 	# Perform a query on the graphrag.
+	sampled_queries = queries.shuffle(seed=SEED).select(range(5))
+	for query in sampled_queries:
+		question, chunk_id, answer = query["og_query"], query["chunk_id"], query["answer"]
+		graphrag_answer = graphrag.query(question)
+
+		# Output results.
+		print(f"Question: {question}")
+		print(f"Expected answer: {answer} (chunk id {chunk_id})")
+		print(f"Generated answer: {graphrag_answer}")
+		print("-" * 72)
 
 
 	# Exit the program.

@@ -40,19 +40,23 @@ class OllamaLLM(LLM):
 		host: str = "http://localhost:11434", 
 	):
 		self.LLM_MODEL = llm_model
-		self.OLLAMA_URL = host
+		self.OLLAMA_URL = host.rstrip("/")
 
 
 	def call_llm(self, prompt: str, format: str = "") -> str:
+		payload = {
+			"model": self.LLM_MODEL, 
+			"prompt": prompt, 
+			"stream": False, 
+		}
+		if format != "":
+			payload["format"] = format
+
 		res = requests.post(
-			f"{self.OLLAMA_URL}/generate", 
-			json={
-				"model": self.LLM_MODEL, 
-				"prompt": prompt, 
-				"stream": False, 
-				"format": format
-			}
+			f"{self.OLLAMA_URL}/api/generate", 
+			json=payload
 		)
+		res.raise_for_status()
 		return res.json()['response']
 	
 

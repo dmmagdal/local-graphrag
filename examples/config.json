@@ -7,14 +7,15 @@
             "model_save_root": "./models",
             "vector_db": "./vectors",
             "table_name": "narrative-qna",
-            "use_binary": false
+            "use_binary": false,
+            "metric": "cosine"
         },
         "graph": {
             "graph_db": "./graph"
         },
         "llm": {
             "host": "http://localhost:11434",
-            "model_id": "llama3.2-1b"
+            "model_id": "llama3.2:1b"
         }
     }
 }

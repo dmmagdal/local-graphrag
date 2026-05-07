@@ -1,4 +1,4 @@
-from .chunk import Chunker
+from .chunker import Chunker
 from .graphdb import LadybugGraphDB
 from .vectordb import VectorDB
 from .graphrag import GraphRAG

@@ -3,6 +3,8 @@
 
 # Python
 **/__pycache__/
+**/dist/
+**/.venv/
 
 # Vs Code
 /.vscode/
@@ -13,3 +15,6 @@
 
 # Dataset
 **/illuin-conteb_narrative-qa
+
+# Models
+**/models
