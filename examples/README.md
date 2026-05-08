@@ -36,3 +36,42 @@
              - Additional metadata is there too for the queries subset.
          - Cons:
              - Will have to account for storage requirements for the data.
+ - Models tested when generating triplets in GraphRAG
+     - Best performing models:
+         - phi4-mini-reasoning:3.8b
+         - mistral-small:30b
+     - llama3.2:1b
+         - Fits on-device: yes
+         - Generates triplets: yes
+         - Triplets match expected format: kind of (core expected keys are there but additional/extra keys are generated)
+         - Triplets capture relationships: yes
+         - Generates multiple triplets for text: no
+         - Generations are repeatable: no
+     - phi4-mini-reasoning:3.8B
+         - Fits on-device: yes
+         - Generates triplets: yes
+         - Triplets match expected format: mostly (for some sentences, the "object" value is left blank)
+         - Triplets capture relationships: yes
+         - Generates multiple triplets for text: yes
+         - Generations are repeatable: yes
+     - mistral:7B
+         - Fits on-device: yes
+         - Generates triplets: yes
+         - Triplets match expected format: kind of (for the most part, the format is followed, save for a few naming issues/glitch)
+         - Triplets capture relationships: yes
+         - Generates multiple triplets for text: no
+         - Generations are repeatable: yes
+     - llama3.1:8b
+         - Fits on-device: yes (barely for 8GB RAM w/ Ollama)
+         - Generates triplets: yes
+         - Triplets match expected format: yes 
+         - Triplets capture relationships: yes
+         - Generates multiple triplets for text: no
+         - Generations are repeatable: yes
+     - mistral-small:30b
+         - Fits on-device: no (model requires sufficient RAM in order to run)
+         - Generates triplets: yes
+         - Triplets match expected format: yes 
+         - Triplets capture relationships: yes
+         - Generates multiple triplets for text: yes
+         - Generations are repeatable: yes

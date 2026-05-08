@@ -14,6 +14,8 @@ class LLM:
 		llm_model: str,
 		host: str = "http://localhost:11434",
 	):
+		self.LLM_Model = llm_model
+		self.OLLAMA_HOST = host.rstrip('/')
 		pass
 
 
@@ -61,8 +63,29 @@ class OllamaLLM(LLM):
 	
 
 	def extract_triplets(self, text: str) -> List[Dict[str, str]]:
-		prompt = f"""Extract entities and relationships from the following text as a JSON list of objects.
-		Format: [{{"subject": "name", "relation": "description", "object": "name", "type": "category"}}]
+		# prompt = f"""Extract entities and relationships from the following text as a JSON list of objects.
+		# Format: [{{"subject": "name", "relation": "description", "object": "name", "type": "category"}}]
+		# Text: {text}
+		# JSON:"""
+		prompt = f"""You are an expert data extraction algorithm. Your task is to extract an exhaustive list of entities and their relationships from the given text.
+		
+		RULES:
+		1. You MUST extract as many meaningful subject-relation-object triplets as possible.
+		2. You MUST respond ONLY with a valid JSON array of objects.
+		3. Each object MUST have exactly these four keys: "subject", "relation", "object", "type". Do not add any other keys.
+		4. The "type" should be a broad category for the subject (e.g., "person", "location", "organization").
+
+		EXAMPLE INPUT:
+		John Smith works at Google. He lives in New York with his dog, Max.
+		
+		EXAMPLE OUTPUT:
+		[
+		  {{"subject": "John Smith", "relation": "works at", "object": "Google", "type": "person"}},
+		  {{"subject": "John Smith", "relation": "lives in", "object": "New York", "type": "person"}},
+		  {{"subject": "John Smith", "relation": "owns", "object": "Max", "type": "person"}},
+		  {{"subject": "Max", "relation": "is a", "object": "dog", "type": "animal"}}
+		]
+
 		Text: {text}
 		JSON:"""
 		raw_json = self.call_llm(prompt, format="json")
